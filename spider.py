@@ -1,8 +1,8 @@
-from urllib.request import urlopen
+from urllib import request
 from link_finder import LinkFinder
 from domain import *
 from general import *
-
+import time
 
 class Spider:
 
@@ -41,13 +41,20 @@ class Spider:
             Spider.queue.remove(page_url)
             Spider.crawled.add(page_url)
             Spider.update_files()
+            time.sleep(0.01)
 
     # Converts raw response data into readable information and checks for proper html formatting
     @staticmethod
     def gather_links(page_url):
         html_string = ''
         try:
-            response = urlopen(page_url)
+            # proxy = {'http': '35.233.137.170:80'}
+            # proxyHeader = request.ProxyHandler(proxy)
+            # opener = request.build_opener(proxyHeader)
+            # request.install_opener(opener)
+            headers = {'User-Agent' : 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/74.0.3729.131 Safari/537.36'}
+            page = request.Request(page_url,headers = headers)
+            response = request.urlopen(page)
             if 'text/html' in response.getheader('Content-Type'):
                 html_bytes = response.read()
                 html_string = html_bytes.decode("utf-8")
