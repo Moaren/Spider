@@ -4,11 +4,14 @@ from domain import *
 from general import *
 import time
 from bs4 import BeautifulSoup
+# from sql_helper import sql_helper
+import json
 
 
 class Spider:
 
     project_name = ''
+    # db_file = ''
     base_url = ''
     domain_name = ''
     queue_file = ''
@@ -16,7 +19,7 @@ class Spider:
     queue = set()
     crawled = set()
 
-    def __init__(self, project_name, base_url, domain_name):
+    def __init__(self,project_name, base_url, domain_name):
         Spider.project_name = project_name
         Spider.base_url = base_url
         Spider.domain_name = domain_name
@@ -36,15 +39,18 @@ class Spider:
     # Updates user display, fills queue and updates files
     @staticmethod
     def crawl_page(thread_name, page_url):
-        # if page_url not in Spider.crawled:
+        if page_url not in Spider.crawled:
             print(thread_name + ' now crawling ' + page_url)
-            # print('Queue ' + str(len(Spider.queue)) + ' | Crawled  ' + str(len(Spider.crawled)))
+            print('Queue ' + str(len(Spider.queue)) + ' | Crawled  ' + str(len(Spider.crawled)))
             html_string = Spider.gather_html_string(page_url)
-            # Spider.add_links_to_queue(Spider.gather_links(html_string,page_url))
-            Spider.gather_info(html_string)
-            # Spider.queue.remove(page_url)
-            # Spider.crawled.add(page_url)
-            # Spider.update_files()
+            links = Spider.gather_links(html_string,page_url)
+            Spider.add_links_to_queue(links)
+            if(Spider.phone_num(page_url)):
+                data = Spider.gather_info(html_string)
+                Spider.store_info(data,Spider.phone_num(page_url))
+            Spider.queue.remove(page_url)
+            Spider.crawled.add(page_url)
+            Spider.update_files()
             time.sleep(0.1)
 
     # Get the HTML text from a certain page
@@ -98,16 +104,74 @@ class Spider:
     @staticmethod
     def gather_info(html_string):
         soup = BeautifulSoup(html_string, 'lxml')
-        print("This is \n" + soup.prettify())
+        # print("This is \n" + soup.prettify())
+        result = []
         for comment in soup.find_all("li",class_ = "oos_contlet"):
-            datetime = comment.find("time").text
-            print(datetime)
-            content = comment.find("div",class_ = "oos_contletBody").text
-            print(content)
-            call_details = comment.find("ul",class_ = "callDetails")
-            for i in call_details.find_all("li"):
-                print(i.text)
+            try:
+                # print(comment)
+                datetime = comment.find("time").text
+                # print(datetime)
+                content = comment.find("div",class_ = "oos_contletBody").text
+                # print(content)
+                call_type, caller = "", ""
+            except AttributeError: # If the oos_contlet object is an advertisement picture
+                continue
+
+            try:
+                call_details = comment.find("ul",class_ = "callDetails")
+                for i in call_details.find_all("li"):
+                    if("Call type" in i.text):
+                        call_type = i.text.split('Call type: ')[1]
+                    if("Caller" in i.text):
+                        caller = i.text.split('Caller: ')[1]
+            except AttributeError:
+                pass
+            result.append({
+            "datetime": datetime,
+            "content": content,
+            "caller": caller,
+            "call_type": call_type,
+            })
+        # print(result)
+        return result
 
 
-url = "https://800notes.com/Phone.aspx/1-484-661-4706"
-Spider.crawl_page("test_bs4", url)
+
+    @staticmethod
+    def phone_num(page_url):
+        if("https://800notes.com/Phone.aspx/" in page_url and "#" not in page_url):
+            number =  page_url.split('/')[4]
+            valid_char = ['0','1','2','3','4','5','6','7','8','9','-']
+            for i in number:
+                # If the formate is not *-****-***
+                if(i not in valid_char):
+                    return None
+            return number
+        return None
+
+    @staticmethod
+    def store_info(data,number):
+        file_name = number + '.json'
+        json_file = Spider.project_name + "/" + file_name
+        if not os.path.isfile(json_file):
+            with open(json_file, 'w') as f:
+                f.write(json.dumps(data))
+            print(number + "'s info has been stored")
+        else:
+            with open(json_file,"r") as f:
+                load_dict = json.load(f)
+                load_dict.extend(data)
+                # print(len(load_dict))
+            with open(json_file, 'w') as f:
+                f.write(json.dumps(load_dict))
+            print(number + "'s info has been updated")
+        pass
+
+
+# url = "https://800notes.com/Phone.aspx/1-240-273-1357"
+# Spider.crawl_page("test_bs4", url)
+
+# url = "https://800notes.com/Phone.aspx/1-240-273-1357/2"
+# Spider.crawl_page("test_bs4", url)
+
+# print(Spider.phone_num("https://800notes.com/Phone.aspx/1-240-273-1357/2"))

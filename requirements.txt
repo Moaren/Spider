@@ -1,0 +1,3 @@
+json
+beautifulsoup4
+sqlite3

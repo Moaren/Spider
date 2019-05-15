@@ -49,3 +49,4 @@ def set_to_file(links, file_name):
     with open(file_name,"w") as f:
         for l in sorted(links):
             f.write(l+"\n")
+

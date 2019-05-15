@@ -5,11 +5,12 @@ from spider import Spider
 from domain import *
 from general import *
 
-PROJECT_NAME = 'phoneDB'
-HOMEPAGE = 'http://reversenumberdatabase.com/searchResults?q=scam&x=0&y=0'
+PROJECT_NAME = '800notes'
+HOMEPAGE = 'https://800notes.com/Phone.aspx/1-240-273-1357'
 DOMAIN_NAME = get_domain_name(HOMEPAGE)
 QUEUE_FILE = PROJECT_NAME + '/queue.txt'
 CRAWLED_FILE = PROJECT_NAME + '/crawled.txt'
+# DB_FILE = PROJECT_NAME + "_info.db"
 NUMBER_OF_THREADS = 1
 queue = Queue()
 Spider(PROJECT_NAME, HOMEPAGE, DOMAIN_NAME)
