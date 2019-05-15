@@ -5,8 +5,8 @@ from spider import Spider
 from domain import *
 from general import *
 
-PROJECT_NAME = '800notes'
-HOMEPAGE = 'https://800notes.com/'
+PROJECT_NAME = 'phoneDB'
+HOMEPAGE = 'http://reversenumberdatabase.com/searchResults?q=scam&x=0&y=0'
 DOMAIN_NAME = get_domain_name(HOMEPAGE)
 QUEUE_FILE = PROJECT_NAME + '/queue.txt'
 CRAWLED_FILE = PROJECT_NAME + '/crawled.txt'

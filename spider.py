@@ -3,6 +3,8 @@ from link_finder import LinkFinder
 from domain import *
 from general import *
 import time
+from bs4 import BeautifulSoup
+
 
 class Spider:
 
@@ -34,30 +36,43 @@ class Spider:
     # Updates user display, fills queue and updates files
     @staticmethod
     def crawl_page(thread_name, page_url):
-        if page_url not in Spider.crawled:
+        # if page_url not in Spider.crawled:
             print(thread_name + ' now crawling ' + page_url)
-            print('Queue ' + str(len(Spider.queue)) + ' | Crawled  ' + str(len(Spider.crawled)))
-            Spider.add_links_to_queue(Spider.gather_links(page_url))
-            Spider.queue.remove(page_url)
-            Spider.crawled.add(page_url)
-            Spider.update_files()
-            time.sleep(0.01)
+            # print('Queue ' + str(len(Spider.queue)) + ' | Crawled  ' + str(len(Spider.crawled)))
+            html_string = Spider.gather_html_string(page_url)
+            # Spider.add_links_to_queue(Spider.gather_links(html_string,page_url))
+            Spider.gather_info(html_string)
+            # Spider.queue.remove(page_url)
+            # Spider.crawled.add(page_url)
+            # Spider.update_files()
+            time.sleep(0.1)
 
-    # Converts raw response data into readable information and checks for proper html formatting
+    # Get the HTML text from a certain page
     @staticmethod
-    def gather_links(page_url):
+    def gather_html_string(page_url):
         html_string = ''
         try:
             # proxy = {'http': '35.233.137.170:80'}
             # proxyHeader = request.ProxyHandler(proxy)
             # opener = request.build_opener(proxyHeader)
             # request.install_opener(opener)
-            headers = {'User-Agent' : 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/74.0.3729.131 Safari/537.36'}
-            page = request.Request(page_url,headers = headers)
+            headers = {
+                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/74.0.3729.131 Safari/537.36'}
+            page = request.Request(page_url, headers=headers)
             response = request.urlopen(page)
             if 'text/html' in response.getheader('Content-Type'):
                 html_bytes = response.read()
                 html_string = html_bytes.decode("utf-8")
+                return html_string
+            return ''
+        except Exception as e:
+            print(str(e))
+            return ''
+
+    # Converts raw response data into readable information and checks for proper html formatting
+    @staticmethod
+    def gather_links(html_string,page_url):
+        try:
             finder = LinkFinder(Spider.base_url, page_url)
             finder.feed(html_string)
         except Exception as e:
@@ -79,3 +94,20 @@ class Spider:
     def update_files():
         set_to_file(Spider.queue, Spider.queue_file)
         set_to_file(Spider.crawled, Spider.crawled_file)
+
+    @staticmethod
+    def gather_info(html_string):
+        soup = BeautifulSoup(html_string, 'lxml')
+        print("This is \n" + soup.prettify())
+        for comment in soup.find_all("li",class_ = "oos_contlet"):
+            datetime = comment.find("time").text
+            print(datetime)
+            content = comment.find("div",class_ = "oos_contletBody").text
+            print(content)
+            call_details = comment.find("ul",class_ = "callDetails")
+            for i in call_details.find_all("li"):
+                print(i.text)
+
+
+url = "https://800notes.com/Phone.aspx/1-484-661-4706"
+Spider.crawl_page("test_bs4", url)
