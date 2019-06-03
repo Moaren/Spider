@@ -43,15 +43,19 @@ class Spider:
             print(thread_name + ' now crawling ' + page_url)
             print('Queue ' + str(len(Spider.queue)) + ' | Crawled  ' + str(len(Spider.crawled)))
             html_string = Spider.gather_html_string(page_url)
-            links = Spider.gather_links(html_string,page_url)
-            Spider.add_links_to_queue(links)
-            if(Spider.phone_num(page_url)):
-                data = Spider.gather_info(html_string)
-                Spider.store_info(data,Spider.phone_num(page_url))
-            Spider.queue.remove(page_url)
-            Spider.crawled.add(page_url)
-            Spider.update_files()
-            time.sleep(0.1)
+            if html_string == "":
+                Spider.update_files()
+                time.sleep(1)
+            else:
+                links = Spider.gather_links(html_string,page_url)
+                Spider.add_links_to_queue(links)
+                if(Spider.phone_num(page_url)):
+                    data = Spider.gather_info(html_string)
+                    Spider.store_info(data,Spider.phone_num(page_url))
+                Spider.queue.remove(page_url)
+                Spider.crawled.add(page_url)
+                Spider.update_files()
+                time.sleep(0.1)
 
     # Get the HTML text from a certain page
     @staticmethod
