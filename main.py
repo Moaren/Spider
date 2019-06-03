@@ -6,10 +6,10 @@ from domain import *
 from general import *
 
 PROJECT_NAME = '800notes'
-HOMEPAGE = 'https://800notes.com/Phone.aspx/1-240-273-1357'
+HOMEPAGE = 'https://800notes.com/Phone.aspx/1-866-236-7606'
 DOMAIN_NAME = get_domain_name(HOMEPAGE)
-QUEUE_FILE = PROJECT_NAME + '/queue.txt'
-CRAWLED_FILE = PROJECT_NAME + '/crawled.txt'
+QUEUE_FILE = PROJECT_NAME + '/queue.csv'
+CRAWLED_FILE = PROJECT_NAME + '/crawled.csv'
 # DB_FILE = PROJECT_NAME + "_info.db"
 NUMBER_OF_THREADS = 1
 queue = Queue()
@@ -38,6 +38,7 @@ def create_jobs():
         queue.put(link)
     queue.join()
     crawl()
+    pass
 
 
 # Check if there are items in the queue, if so crawl them

@@ -23,8 +23,8 @@ class Spider:
         Spider.project_name = project_name
         Spider.base_url = base_url
         Spider.domain_name = domain_name
-        Spider.queue_file = Spider.project_name + '/queue.txt'
-        Spider.crawled_file = Spider.project_name + '/crawled.txt'
+        Spider.queue_file = Spider.project_name + '/queue.csv'
+        Spider.crawled_file = Spider.project_name + '/crawled.csv'
         self.boot()
         self.crawl_page('First spider', Spider.base_url)
 
@@ -110,7 +110,7 @@ class Spider:
             try:
                 # print(comment)
                 datetime = comment.find("time").text
-                # print(datetime)
+                #                 # print(datetime)
                 content = comment.find("div",class_ = "oos_contletBody").text
                 # print(content)
                 call_type, caller = "", ""
@@ -126,11 +126,19 @@ class Spider:
                         caller = i.text.split('Caller: ')[1]
             except AttributeError:
                 pass
+
+            is_reply = False # Judge whether the comment is the reply to another person
+            user_info = comment.find("div",class_ = "oos_pc").text
+            if "replies to" in user_info:
+                is_reply = True
+
+            # print(user_info)
             result.append({
             "datetime": datetime,
             "content": content,
             "caller": caller,
             "call_type": call_type,
+            "is_reply":is_reply,
             })
         # print(result)
         return result
@@ -151,21 +159,20 @@ class Spider:
 
     @staticmethod
     def store_info(data,number):
-        file_name = number + '.json'
-        json_file = Spider.project_name + "/" + file_name
-        if not os.path.isfile(json_file):
-            with open(json_file, 'w') as f:
-                f.write(json.dumps(data))
+        file_name = Spider.project_name + '.csv'
+        csv_file = Spider.project_name + "/" + file_name
+        for comment in data:
+            comment['content'] = comment['content'].replace(' ', "")
+            comment['phone_number'] = number
+        # print(data)
+        if not os.path.isfile(csv_file):
+            df = pd.DataFrame(data, columns=['datetime', 'content', 'caller', 'call_type','phone_number','is_reply'])
+            df.to_csv(csv_file, index=False)
             print(number + "'s info has been stored")
         else:
-            with open(json_file,"r") as f:
-                load_dict = json.load(f)
-                load_dict.extend(data)
-                # print(len(load_dict))
-            with open(json_file, 'w') as f:
-                f.write(json.dumps(load_dict))
+            df = pd.DataFrame(data, columns=['datetime', 'content', 'caller', 'call_type','phone_number',"is_reply"])
+            df.to_csv(csv_file, index=False, mode="a",header=False)
             print(number + "'s info has been updated")
-        pass
 
 
 # url = "https://800notes.com/Phone.aspx/1-240-273-1357"
