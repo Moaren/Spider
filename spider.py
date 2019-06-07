@@ -171,7 +171,7 @@ class Spider:
         # print(data)
         if not os.path.isfile(csv_file):
             df = pd.DataFrame(data, columns=['datetime', 'content', 'caller', 'call_type','phone_number','is_reply'])
-            df.to_csv(csv_file, index=False)
+            df.to_csv(csv_file, index=False,header = False)
             print(number + "'s info has been stored")
         else:
             df = pd.DataFrame(data, columns=['datetime', 'content', 'caller', 'call_type','phone_number',"is_reply"])
