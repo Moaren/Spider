@@ -6,6 +6,7 @@ import time
 from bs4 import BeautifulSoup
 # from sql_helper import sql_helper
 import json
+import requests
 
 
 class Spider:
@@ -62,19 +63,22 @@ class Spider:
     def gather_html_string(page_url):
         html_string = ''
         try:
-            # proxy = {'http': '35.233.137.170:80'}
+            # proxy = {'http': 'http://101.109.255.97:44377'}
             # proxyHeader = request.ProxyHandler(proxy)
             # opener = request.build_opener(proxyHeader)
             # request.install_opener(opener)
-            headers = {
-                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/74.0.3729.131 Safari/537.36'}
-            page = request.Request(page_url, headers=headers)
-            response = request.urlopen(page)
-            if 'text/html' in response.getheader('Content-Type'):
-                html_bytes = response.read()
-                html_string = html_bytes.decode("utf-8")
-                return html_string
-            return ''
+            headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/74.0.3729.131 Safari/537.36'}
+            # page = request.Request(page_url, headers=headers)
+            # response = request.urlopen(page)
+            # if 'text/html' in response.getheader('Content-Type'):
+            #     html_bytes = response.read()
+            #     html_string = html_bytes.decode("utf-8")
+            #     return html_string
+            # return ''
+            response = requests.get(page_url,headers=headers,timeout=5)
+            response.raise_for_status() #返回的状态码不是200的时候，引发异常；只要在收到响应的时候调用这个方法，就可以避开状态码200以外的各种意外情况
+            response.encoding = 'utf-8'
+            return response.text
         except Exception as e:
             print(str(e))
             return ''
@@ -171,11 +175,11 @@ class Spider:
         # print(data)
         if not os.path.isfile(csv_file):
             df = pd.DataFrame(data, columns=['datetime', 'content', 'caller', 'call_type','phone_number','is_reply'])
-            df.to_csv(csv_file, index=False)
+            df.to_csv(csv_file, index=False,header = False,encoding='utf-8')
             print(number + "'s info has been stored")
         else:
             df = pd.DataFrame(data, columns=['datetime', 'content', 'caller', 'call_type','phone_number',"is_reply"])
-            df.to_csv(csv_file, index=False, mode="a",header=False)
+            df.to_csv(csv_file, index=False, mode="a",header=False,encoding='utf-8')
             print(number + "'s info has been updated")
 
 
