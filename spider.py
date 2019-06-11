@@ -7,7 +7,28 @@ from bs4 import BeautifulSoup
 # from sql_helper import sql_helper
 import json
 import requests
+import requests
 
+def get_proxy():
+    return requests.get("http://127.0.0.1:5010/get/").content
+
+def delete_proxy(proxy):
+    requests.get("http://127.0.0.1:5010/delete/?proxy={}".format(proxy))
+
+def getHtml():
+    # ....
+    retry_count = 5
+    proxy = get_proxy()
+    while retry_count > 0:
+        try:
+            html = requests.get('https://www.example.com', proxies={"http": "http://{}".format(proxy)})
+            # 使用代理访问
+            return html
+        except Exception:
+            retry_count -= 1
+    # 出错5次, 删除代理池中代理
+    delete_proxy(proxy)
+    return None
 
 class Spider:
 
@@ -19,13 +40,15 @@ class Spider:
     crawled_file = ''
     queue = set()
     crawled = set()
+    use_proxy = ''
 
-    def __init__(self,project_name, base_url, domain_name):
+    def __init__(self,project_name, base_url, domain_name, use_proxy = False):
         Spider.project_name = project_name
         Spider.base_url = base_url
         Spider.domain_name = domain_name
         Spider.queue_file = Spider.project_name + '/queue.csv'
         Spider.crawled_file = Spider.project_name + '/crawled.csv'
+        Spider.use_proxy = use_proxy
         self.boot()
         self.crawl_page('First spider', Spider.base_url)
 
@@ -56,17 +79,13 @@ class Spider:
                 Spider.queue.remove(page_url)
                 Spider.crawled.add(page_url)
                 Spider.update_files()
-                time.sleep(0.5)
+                time.sleep(0.7)
 
     # Get the HTML text from a certain page
     @staticmethod
     def gather_html_string(page_url):
         html_string = ''
         try:
-            # proxy = {'http': 'http://101.109.255.97:44377'}
-            # proxyHeader = request.ProxyHandler(proxy)
-            # opener = request.build_opener(proxyHeader)
-            # request.install_opener(opener)
             headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/74.0.3729.131 Safari/537.36'}
             # page = request.Request(page_url, headers=headers)
             # response = request.urlopen(page)
@@ -75,10 +94,26 @@ class Spider:
             #     html_string = html_bytes.decode("utf-8")
             #     return html_string
             # return ''
-            response = requests.get(page_url,headers=headers,timeout=5)
-            response.raise_for_status() #返回的状态码不是200的时候，引发异常；只要在收到响应的时候调用这个方法，就可以避开状态码200以外的各种意外情况
-            response.encoding = 'utf-8'
-            return response.text
+            if(Spider.use_proxy):
+                retry_count = 5
+                proxy = get_proxy()
+                while retry_count > 0:
+                    try:
+                        response = requests.get(page_url, proxies={"http": "http://{}".format(proxy)},headers=headers,timeout=5)
+                        if(response.status_code == "502"):
+                            delete_proxy(proxy)
+                        response.raise_for_status()
+                        response.encoding = 'utf-8'
+                        return response.text
+                    except Exception:
+                        retry_count -= 1
+                delete_proxy(proxy)
+                return ""
+            else:
+                response = requests.get(page_url,headers=headers,timeout=5)
+                response.raise_for_status()
+                response.encoding = 'utf-8'
+                return response.text
         except Exception as e:
             print(str(e))
             return ''

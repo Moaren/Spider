@@ -10,10 +10,11 @@ HOMEPAGE = 'https://800notes.com/Phone.aspx/1-866-236-7606'
 DOMAIN_NAME = get_domain_name(HOMEPAGE)
 QUEUE_FILE = PROJECT_NAME + '/queue.csv'
 CRAWLED_FILE = PROJECT_NAME + '/crawled.csv'
+USE_PROXY = False
 # DB_FILE = PROJECT_NAME + "_info.db"
 NUMBER_OF_THREADS = 1
 queue = Queue()
-Spider(PROJECT_NAME, HOMEPAGE, DOMAIN_NAME)
+Spider(PROJECT_NAME, HOMEPAGE, DOMAIN_NAME, USE_PROXY)
 
 
 # Create worker threads (will die when main exits)
