@@ -67,7 +67,7 @@ class Spider:
         if page_url not in Spider.crawled:
             print(thread_name + ' now crawling ' + page_url)
             print('Queue ' + str(len(Spider.queue)) + ' | Crawled  ' + str(len(Spider.crawled)))
-            if len(Spider.crawled) % 5000 == 0:
+            if len(Spider.crawled) % 3000 == 0:
                 Spider.backup_csv()
             html_string = Spider.gather_html_string(page_url)
             if html_string == "":
@@ -222,6 +222,7 @@ class Spider:
             df = pd.DataFrame(data, columns=['datetime', 'content', 'caller', 'call_type','phone_number',"is_reply"])
             df.to_csv(csv_file, index=False, mode="a",header=False,encoding='utf-8')
             print(number + "'s info has been updated")
+        del df
 
     @staticmethod
     def backup_csv():
