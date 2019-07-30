@@ -20,17 +20,30 @@ Spider(PROJECT_NAME, HOMEPAGE, DOMAIN_NAME, USE_PROXY)
 
 # Create worker threads (will die when main exits)
 def create_workers():
+    # With proxy
+    proxys = [
+        # proxy_lis1,
+        # proxy_lis2,
+        # ...
+    ] #format: proxy_list = ["username","password","url(xxx.xxx.xxx.xxx:port)"] All the info required for one proxy
+    # Each proxy will be assigned to one thread. So len(proxys) should be equal to NUMBER_OF_THREADS
     for _ in range(NUMBER_OF_THREADS):
-        t = threading.Thread(target=work)
+        t = threading.Thread(target=work(proxys[_]))
         t.daemon = True
         t.start()
 
+    # Without proxy
+    # for _ in range(NUMBER_OF_THREADS):
+    #     t = threading.Thread(target=work())
+    #     t.daemon = True
+    #     t.start()
 
 # Do the next job in the queue
-def work():
+def work(proxy_list = []):
     while True:
         url = queue.get()
-        Spider.crawl_page(threading.current_thread().name, url)
+        # Spider.crawl_page(threading.current_thread().name, url)
+        Spider.crawl_page(threading.current_thread().name, url,proxy_list)
         queue.task_done()
 
 

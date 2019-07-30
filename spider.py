@@ -22,11 +22,11 @@ def getHtml():
     while retry_count > 0:
         try:
             html = requests.get('https://www.example.com', proxies={"http": "http://{}".format(proxy)})
-            # 使用代理访问
+            # Use the proxy
             return html
         except Exception:
             retry_count -= 1
-    # 出错5次, 删除代理池中代理
+    # if there are more than 5 errors, delete the proxy from proxy pool
     delete_proxy(proxy)
     return None
 
@@ -40,7 +40,9 @@ class Spider:
     crawled_file = ''
     queue = set()
     crawled = set()
-    use_proxy = ''
+    use_proxy = False
+
+
 
     def __init__(self,project_name, base_url, domain_name, use_proxy = False):
         Spider.project_name = project_name
@@ -62,13 +64,17 @@ class Spider:
 
     # Updates user display, fills queue and updates files
     @staticmethod
-    def crawl_page(thread_name, page_url):
+    def crawl_page(thread_name, page_url,proxy_lis = []):
         if page_url not in Spider.crawled:
             print(thread_name + ' now crawling ' + page_url)
             print('Queue ' + str(len(Spider.queue)) + ' | Crawled  ' + str(len(Spider.crawled)))
+<<<<<<< HEAD
             if len(Spider.crawled) % 5 == 0:
                 Spider.backup_csv()
             html_string = Spider.gather_html_string(page_url)
+=======
+            html_string = Spider.gather_html_string(page_url,proxy_lis)
+>>>>>>> a46686349704afcfee293cffd917343339f820ee
             if html_string == "":
                 Spider.update_files()
                 time.sleep(1)
@@ -85,8 +91,7 @@ class Spider:
 
     # Get the HTML text from a certain page
     @staticmethod
-    def gather_html_string(page_url):
-        html_string = ''
+    def gather_html_string(page_url,proxy_lis = []):
         try:
             headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/74.0.3729.131 Safari/537.36'}
             # page = request.Request(page_url, headers=headers)
@@ -97,20 +102,15 @@ class Spider:
             #     return html_string
             # return ''
             if(Spider.use_proxy):
-                retry_count = 5
-                proxy = get_proxy()
-                while retry_count > 0:
-                    try:
-                        response = requests.get(page_url, proxies={"http": "http://{}".format(proxy)},headers=headers,timeout=5)
-                        if(response.status_code == "502"):
-                            delete_proxy(proxy)
-                        response.raise_for_status()
-                        response.encoding = 'utf-8'
-                        return response.text
-                    except Exception:
-                        retry_count -= 1
-                delete_proxy(proxy)
-                return ""
+                username = proxy_lis[0]
+                password = proxy_lis[1]
+                url = proxy_lis[2]
+                proxies = {"http": "http://{}:{}@{}".format(username,password,url)}
+                # proxies = {"http": "http://username:password@proxy_ip:proxy_port"}
+                response = requests.get(page_url, proxies=proxies,headers=headers,timeout=5)
+                response.raise_for_status()
+                response.encoding = 'utf-8'
+                return response.text
             else:
                 response = requests.get(page_url,headers=headers,timeout=5)
                 response.raise_for_status()
@@ -216,10 +216,10 @@ class Spider:
         if not os.path.isfile(csv_file):
             df = pd.DataFrame(data, columns=['datetime', 'content', 'caller', 'call_type','phone_number','is_reply'])
             df.to_csv(csv_file, index=False,header = False,encoding='utf-8')
-            print(number + "'s info has been stored")
         else:
             df = pd.DataFrame(data, columns=['datetime', 'content', 'caller', 'call_type','phone_number',"is_reply"])
             df.to_csv(csv_file, index=False, mode="a",header=False,encoding='utf-8')
+<<<<<<< HEAD
             print(number + "'s info has been updated")
 
     @staticmethod
@@ -241,6 +241,9 @@ class Spider:
         csv_df.to_csv(directory + "/" + file_name)
         print(directory + ": The files have been backed up")
 
+=======
+        print(number + "'s info has been stored")
+>>>>>>> a46686349704afcfee293cffd917343339f820ee
 
 # url = "https://800notes.com/Phone.aspx/1-240-273-1357"
 # Spider.crawl_page("test_bs4", url)
