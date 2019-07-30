@@ -4,6 +4,7 @@ from queue import Queue
 from spider import Spider
 from domain import *
 from general import *
+import pandas as pd
 
 PROJECT_NAME = '800notes'
 HOMEPAGE = 'https://800notes.com/Phone.aspx/1-866-236-7606'
@@ -48,6 +49,9 @@ def crawl():
     if len(queued_links) > 0:
         print(str(len(queued_links)) + ' links in the queue')
         create_jobs()
+
+
+
 
 
 create_workers()

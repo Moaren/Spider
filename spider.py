@@ -66,6 +66,8 @@ class Spider:
         if page_url not in Spider.crawled:
             print(thread_name + ' now crawling ' + page_url)
             print('Queue ' + str(len(Spider.queue)) + ' | Crawled  ' + str(len(Spider.crawled)))
+            if len(Spider.crawled) % 5 == 0:
+                Spider.backup_csv()
             html_string = Spider.gather_html_string(page_url)
             if html_string == "":
                 Spider.update_files()
@@ -163,10 +165,13 @@ class Spider:
             try:
                 call_details = comment.find("ul",class_ = "callDetails")
                 for i in call_details.find_all("li"):
-                    if("Call type" in i.text):
-                        call_type = i.text.split('Call type: ')[1]
-                    if("Caller" in i.text):
-                        caller = i.text.split('Caller: ')[1]
+                    try:
+                        if("Call type" in i.text):
+                            call_type = i.text.split('Call type: ')[1]
+                        if("Caller" in i.text):
+                            caller = i.text.split('Caller: ')[1]
+                    except IndexError:
+                        pass
             except AttributeError:
                 pass
 
@@ -216,6 +221,25 @@ class Spider:
             df = pd.DataFrame(data, columns=['datetime', 'content', 'caller', 'call_type','phone_number',"is_reply"])
             df.to_csv(csv_file, index=False, mode="a",header=False,encoding='utf-8')
             print(number + "'s info has been updated")
+
+    @staticmethod
+    def backup_csv():
+        Spider.queue_file = Spider.project_name + '/queue.csv'
+        Spider.crawled_file = Spider.project_name + '/crawled.csv'
+        file_name = Spider.project_name + '.csv'
+        csv_file = Spider.project_name + "/" + file_name
+        queue_df = pd.read_csv(Spider.queue_file,encoding = 'ISO-8859-1')
+        crawled_df = pd.read_csv( Spider.crawled_file,encoding = 'ISO-8859-1')
+        csv_df = pd.read_csv(csv_file,encoding = 'ISO-8859-1')
+
+        directory = time.strftime("%m%d%H%M", time.localtime())
+
+        if not os.path.exists(directory):
+            os.makedirs(directory)
+        queue_df.to_csv(directory + '/queue.csv')
+        crawled_df.to_csv(directory + '/crawled.csv')
+        csv_df.to_csv(directory + "/" + file_name)
+        print(directory + ": The files have been backed up")
 
 
 # url = "https://800notes.com/Phone.aspx/1-240-273-1357"
